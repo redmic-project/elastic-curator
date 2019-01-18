@@ -120,26 +120,24 @@ scheduled-deploy-curator-stable-branch-develop:
   environment:
     name: dev
   only:
-    - master
     - schedules
   when: manual
 
-scheduled-deploy-curator-stable-branch-production:
-  stage: deploy
-  image: registry.gitlab.com/redmic-project/docker/docker-deploy:latest
-  variables:
-    SSH_REMOTE: ${PRO_SSH_REMOTE}
-    COMPOSE_FILE: docker-compose.tmpl.yml:docker-compose.prod.yml
-    ELASTICSEARCH_URL: ${PRO_ELASTICSEARCH_URL}
-    ELASTICSEARCH_AUTH: ${PRO_ELASTICSEARCH_USERNAME}:${PRO_ELASTICSEARCH_PASSWORD}
-  script:
-    - >
-      deploy.sh IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
-      ELASTICSEARCH_URL=${ELASTICSEARCH_URL} ELASTICSEARCH_AUTH=${ELASTICSEARCH_AUTH}
-      DELETE_OLD_LOGS_DISABLE=${DELETE_OLD_LOGS_DISABLE:-True}
-  environment:
-    name: pro
-  only:
-    - master
-    - schedules
-  when: manual
+#scheduled-deploy-curator-stable-branch-production:
+#  stage: deploy
+#  image: registry.gitlab.com/redmic-project/docker/docker-deploy:latest
+#  variables:
+#    SSH_REMOTE: ${PRO_SSH_REMOTE}
+#    COMPOSE_FILE: docker-compose.tmpl.yml:docker-compose.prod.yml
+#    ELASTICSEARCH_URL: ${PRO_ELASTICSEARCH_URL}
+#    ELASTICSEARCH_AUTH: ${PRO_ELASTICSEARCH_USERNAME}:${PRO_ELASTICSEARCH_PASSWORD}
+#  script:
+#    - >
+#      deploy.sh IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
+#      ELASTICSEARCH_URL=${ELASTICSEARCH_URL} ELASTICSEARCH_AUTH=${ELASTICSEARCH_AUTH}
+#      DELETE_OLD_LOGS_DISABLE=${DELETE_OLD_LOGS_DISABLE:-True}
+#  environment:
+#    name: pro
+#  only:
+#    - schedules
+#  when: manual
