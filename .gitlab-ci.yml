@@ -122,6 +122,7 @@ scheduled-deploy-curator-delete-old-logs-stable-branch-develop:
     name: dev
   only:
     - master
+    - schedules
   when: manual
 
 scheduled-deploy-curator-delete-old-logs-stable-branch-production:
@@ -142,4 +143,5 @@ scheduled-deploy-curator-delete-old-logs-stable-branch-production:
     name: pro
   only:
     - master
+    - schedules
   when: manual
