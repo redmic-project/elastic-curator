@@ -104,7 +104,7 @@ deploy-curator-delete-old-logs-stable-branch-production:
     - schedules
   when: manual
 
-scheduled-deploy-curator-delete-old-logs-stable-branch-develop:
+scheduled-deploy-curator-stable-branch-develop:
   stage: deploy
   image: registry.gitlab.com/redmic-project/docker/docker-deploy:latest
   variables:
@@ -112,12 +112,11 @@ scheduled-deploy-curator-delete-old-logs-stable-branch-develop:
     COMPOSE_FILE: docker-compose.tmpl.yml:docker-compose.dev.yml
     ELASTICSEARCH_URL: ${DEV_ELASTICSEARCH_URL}
     ELASTICSEARCH_AUTH: ${DEV_ELASTICSEARCH_USERNAME}:${DEV_ELASTICSEARCH_PASSWORD}
-    DELETE_OLD_LOGS_DISABLE: 'False'
   script:
     - >
       deploy.sh IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
       ELASTICSEARCH_URL=${ELASTICSEARCH_URL} ELASTICSEARCH_AUTH=${ELASTICSEARCH_AUTH}
-      DELETE_OLD_LOGS_DISABLE=${DELETE_OLD_LOGS_DISABLE}
+      DELETE_OLD_LOGS_DISABLE=${DELETE_OLD_LOGS_DISABLE:-True}
   environment:
     name: dev
   only:
@@ -125,7 +124,7 @@ scheduled-deploy-curator-delete-old-logs-stable-branch-develop:
     - schedules
   when: manual
 
-scheduled-deploy-curator-delete-old-logs-stable-branch-production:
+scheduled-deploy-curator-stable-branch-production:
   stage: deploy
   image: registry.gitlab.com/redmic-project/docker/docker-deploy:latest
   variables:
@@ -133,12 +132,11 @@ scheduled-deploy-curator-delete-old-logs-stable-branch-production:
     COMPOSE_FILE: docker-compose.tmpl.yml:docker-compose.prod.yml
     ELASTICSEARCH_URL: ${PRO_ELASTICSEARCH_URL}
     ELASTICSEARCH_AUTH: ${PRO_ELASTICSEARCH_USERNAME}:${PRO_ELASTICSEARCH_PASSWORD}
-    DELETE_OLD_LOGS_DISABLE: 'False'
   script:
     - >
       deploy.sh IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
       ELASTICSEARCH_URL=${ELASTICSEARCH_URL} ELASTICSEARCH_AUTH=${ELASTICSEARCH_AUTH}
-      DELETE_OLD_LOGS_DISABLE=${DELETE_OLD_LOGS_DISABLE}
+      DELETE_OLD_LOGS_DISABLE=${DELETE_OLD_LOGS_DISABLE:-True}
   environment:
     name: pro
   only:
