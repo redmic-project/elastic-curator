@@ -121,7 +121,6 @@ scheduled-deploy-curator-stable-branch-develop:
     name: dev
   only:
     - schedules
-  when: manual
 
 #scheduled-deploy-curator-stable-branch-production:
 #  stage: deploy
@@ -140,4 +139,3 @@ scheduled-deploy-curator-stable-branch-develop:
 #    name: pro
 #  only:
 #    - schedules
-#  when: manual
