@@ -22,7 +22,7 @@ deploy-curator-delete-old-logs-supporting-branch-develop:
     COMPOSE_FILE: docker-compose.tmpl.yml:docker-compose.dev.yml
     ELASTICSEARCH_URL: ${DEV_ELASTICSEARCH_URL}
     ELASTICSEARCH_AUTH: ${DEV_ELASTICSEARCH_USERNAME}:${DEV_ELASTICSEARCH_PASSWORD}
-    DELETE_OLD_LOGS_DISABLE: False
+    DELETE_OLD_LOGS_DISABLE: 'False'
   script:
     - >
       deploy.sh IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
@@ -45,7 +45,7 @@ deploy-curator-delete-old-logs-stable-branch-develop:
     COMPOSE_FILE: docker-compose.tmpl.yml:docker-compose.dev.yml
     ELASTICSEARCH_URL: ${DEV_ELASTICSEARCH_URL}
     ELASTICSEARCH_AUTH: ${DEV_ELASTICSEARCH_USERNAME}:${DEV_ELASTICSEARCH_PASSWORD}
-    DELETE_OLD_LOGS_DISABLE: False
+    DELETE_OLD_LOGS_DISABLE: 'False'
   script:
     - >
       deploy.sh IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
@@ -67,7 +67,7 @@ deploy-curator-delete-old-logs-supporting-branch-production:
     COMPOSE_FILE: docker-compose.tmpl.yml:docker-compose.prod.yml
     ELASTICSEARCH_URL: ${PRO_ELASTICSEARCH_URL}
     ELASTICSEARCH_AUTH: ${PRO_ELASTICSEARCH_USERNAME}:${PRO_ELASTICSEARCH_PASSWORD}
-    DELETE_OLD_LOGS_DISABLE: False
+    DELETE_OLD_LOGS_DISABLE: 'False'
   script:
     - >
       deploy.sh IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
@@ -90,7 +90,7 @@ deploy-curator-delete-old-logs-stable-branch-production:
     COMPOSE_FILE: docker-compose.tmpl.yml:docker-compose.prod.yml
     ELASTICSEARCH_URL: ${PRO_ELASTICSEARCH_URL}
     ELASTICSEARCH_AUTH: ${PRO_ELASTICSEARCH_USERNAME}:${PRO_ELASTICSEARCH_PASSWORD}
-    DELETE_OLD_LOGS_DISABLE: False
+    DELETE_OLD_LOGS_DISABLE: 'False'
   script:
     - >
       deploy.sh IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
@@ -112,7 +112,7 @@ scheduled-deploy-curator-delete-old-logs-stable-branch-develop:
     COMPOSE_FILE: docker-compose.tmpl.yml:docker-compose.dev.yml
     ELASTICSEARCH_URL: ${DEV_ELASTICSEARCH_URL}
     ELASTICSEARCH_AUTH: ${DEV_ELASTICSEARCH_USERNAME}:${DEV_ELASTICSEARCH_PASSWORD}
-    DELETE_OLD_LOGS_DISABLE: False
+    DELETE_OLD_LOGS_DISABLE: 'False'
   script:
     - >
       deploy.sh IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
@@ -132,7 +132,7 @@ scheduled-deploy-curator-delete-old-logs-stable-branch-production:
     COMPOSE_FILE: docker-compose.tmpl.yml:docker-compose.prod.yml
     ELASTICSEARCH_URL: ${PRO_ELASTICSEARCH_URL}
     ELASTICSEARCH_AUTH: ${PRO_ELASTICSEARCH_USERNAME}:${PRO_ELASTICSEARCH_PASSWORD}
-    DELETE_OLD_LOGS_DISABLE: False
+    DELETE_OLD_LOGS_DISABLE: 'False'
   script:
     - >
       deploy.sh IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
