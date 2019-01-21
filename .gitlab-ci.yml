@@ -100,8 +100,8 @@ deploy-curator-delete-old-logs-stable-branch-production:
     - schedules
   when: manual
 
-scheduled-deploy-curator-stable-branch-develop:
-  stage: deploy
+scheduled-run-curator-stable-branch-develop:
+  stage: maintenance
   variables:
     SSH_REMOTE: ${DEV_SSH_REMOTE}
     SERVICE: elastic_${CI_PROJECT_NAME}
@@ -109,8 +109,8 @@ scheduled-deploy-curator-stable-branch-develop:
   only:
     - schedules
 
-#scheduled-deploy-curator-stable-branch-production:
-#  stage: deploy
+#scheduled-run-curator-stable-branch-production:
+#  stage: maintenance
 #  variables:
 #    SSH_REMOTE: ${PRO_SSH_REMOTE}
 #    SERVICE: elastic_${CI_PROJECT_NAME}
