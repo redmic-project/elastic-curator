@@ -2,7 +2,7 @@ stages:
   - deploy
   - maintenance
 
-image: docker:stable
+image: registry.gitlab.com/redmic-project/docker/docker-deploy:latest
 
 variables:
   DOCKER_DRIVER: overlay2
@@ -16,7 +16,6 @@ services:
 
 deploy-curator-delete-old-logs-supporting-branch-develop:
   stage: deploy
-  image: registry.gitlab.com/redmic-project/docker/docker-deploy:latest
   variables:
     SSH_REMOTE: ${DEV_SSH_REMOTE}
     COMPOSE_FILE: docker-compose.tmpl.yml:docker-compose.dev.yml
@@ -39,7 +38,6 @@ deploy-curator-delete-old-logs-supporting-branch-develop:
 
 deploy-curator-delete-old-logs-stable-branch-develop:
   stage: deploy
-  image: registry.gitlab.com/redmic-project/docker/docker-deploy:latest
   variables:
     SSH_REMOTE: ${DEV_SSH_REMOTE}
     COMPOSE_FILE: docker-compose.tmpl.yml:docker-compose.dev.yml
@@ -61,7 +59,6 @@ deploy-curator-delete-old-logs-stable-branch-develop:
 
 deploy-curator-delete-old-logs-supporting-branch-production:
   stage: deploy
-  image: registry.gitlab.com/redmic-project/docker/docker-deploy:latest
   variables:
     SSH_REMOTE: ${PRO_SSH_REMOTE}
     COMPOSE_FILE: docker-compose.tmpl.yml:docker-compose.prod.yml
@@ -84,7 +81,6 @@ deploy-curator-delete-old-logs-supporting-branch-production:
 
 deploy-curator-delete-old-logs-stable-branch-production:
   stage: deploy
-  image: registry.gitlab.com/redmic-project/docker/docker-deploy:latest
   variables:
     SSH_REMOTE: ${PRO_SSH_REMOTE}
     COMPOSE_FILE: docker-compose.tmpl.yml:docker-compose.prod.yml
@@ -106,36 +102,18 @@ deploy-curator-delete-old-logs-stable-branch-production:
 
 scheduled-deploy-curator-stable-branch-develop:
   stage: deploy
-  image: registry.gitlab.com/redmic-project/docker/docker-deploy:latest
   variables:
     SSH_REMOTE: ${DEV_SSH_REMOTE}
-    COMPOSE_FILE: docker-compose.tmpl.yml:docker-compose.dev.yml
-    ELASTICSEARCH_URL: ${DEV_ELASTICSEARCH_URL}
-    ELASTICSEARCH_AUTH: ${DEV_ELASTICSEARCH_USERNAME}:${DEV_ELASTICSEARCH_PASSWORD}
-  script:
-    - >
-      deploy.sh IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
-      ELASTICSEARCH_URL=${ELASTICSEARCH_URL} ELASTICSEARCH_AUTH=${ELASTICSEARCH_AUTH}
-      DELETE_OLD_LOGS_DISABLE=${DELETE_OLD_LOGS_DISABLE:-True}
-  environment:
-    name: dev
+    SERVICE: elastic_${CI_PROJECT_NAME}
+  script: relaunch.sh
   only:
     - schedules
 
 #scheduled-deploy-curator-stable-branch-production:
 #  stage: deploy
-#  image: registry.gitlab.com/redmic-project/docker/docker-deploy:latest
 #  variables:
 #    SSH_REMOTE: ${PRO_SSH_REMOTE}
-#    COMPOSE_FILE: docker-compose.tmpl.yml:docker-compose.prod.yml
-#    ELASTICSEARCH_URL: ${PRO_ELASTICSEARCH_URL}
-#    ELASTICSEARCH_AUTH: ${PRO_ELASTICSEARCH_USERNAME}:${PRO_ELASTICSEARCH_PASSWORD}
-#  script:
-#    - >
-#      deploy.sh IMAGE_NAME=${IMAGE_NAME} IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
-#      ELASTICSEARCH_URL=${ELASTICSEARCH_URL} ELASTICSEARCH_AUTH=${ELASTICSEARCH_AUTH}
-#      DELETE_OLD_LOGS_DISABLE=${DELETE_OLD_LOGS_DISABLE:-True}
-#  environment:
-#    name: pro
+#    SERVICE: elastic_${CI_PROJECT_NAME}
+#  script: relaunch.sh
 #  only:
 #    - schedules
