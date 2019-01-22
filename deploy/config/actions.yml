@@ -30,11 +30,16 @@ actions:
       name: # default is 'curator-%Y%m%d%H%M%S'
       wait_for_completion: True
       max_wait: 3600
+      wait_interval: 30
       disable_action: ${SNAPSHOT_DISABLE:False}
     filters:
     - filtertype: pattern
       kind: prefix
       value: ${LOG_INDEX_PREFIX:fluentd-}
+      exclude: True
+    - filtertype: pattern
+      kind: prefix
+      value: searchguard
       exclude: True
 
   3:
@@ -62,7 +67,9 @@ actions:
     options:
       repository: ${SNAPSHOT_REPOSITORY:s3-backup}
       name: ${SNAPSHOT_RESTORE_NAME}
-      indices: ${SNAPSHOT_RESTORE_INDICES}
+      indices:
+      - ${SNAPSHOT_RESTORE_INDICES}
+      wait_interval: 30
       disable_action: ${RESTORE_SNAPSHOT_DISABLE:True}
     filters:
     - filtertype: state
