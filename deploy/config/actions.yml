@@ -38,11 +38,12 @@ actions:
       exclude: True
 
   3:
-    action: delete_snapshot
+    action: delete_snapshots
     description: >-
       Delete old snapshots (90 by default) from repository ('s3-backup' by default).
     options:
       repository: ${SNAPSHOT_REPOSITORY:s3-backup}
+      ignore_empty_list: True
       retry_interval: 120
       retry_count: 3
       disable_action: ${DELETE_OLD_SNAPSHOTS_DISABLE:False}
