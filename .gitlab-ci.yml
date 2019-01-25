@@ -43,6 +43,7 @@ deploy-curator-supporting-branch-develop:
   except:
     - master
     - schedules
+    - web
   when: manual
 
 deploy-curator-stable-branch-develop:
@@ -74,6 +75,7 @@ deploy-curator-stable-branch-develop:
     - master
   except:
     - schedules
+    - web
   when: manual
 
 deploy-curator-supporting-branch-production:
@@ -106,6 +108,7 @@ deploy-curator-supporting-branch-production:
   except:
     - master
     - schedules
+    - web
   when: manual
 
 deploy-curator-stable-branch-production:
@@ -137,6 +140,7 @@ deploy-curator-stable-branch-production:
     - master
   except:
     - schedules
+    - web
   when: manual
 
 scheduled-run-curator-stable-branch-develop:
