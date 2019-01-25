@@ -1,0 +1,53 @@
+version: '3.5'
+
+services:
+  curator:
+    image: bobrik/curator:${IMAGE_TAG:-latest}
+    command: /.curator/actions.yml
+    environment:
+      - ELASTICSEARCH_URL
+      - ELASTICSEARCH_AUTH
+      - ELASTICSEARCH_PORT
+      - CURATOR_TIMEOUT
+      - LOG_INDEX_PREFIX
+      - DELETE_OLD_LOGS_DAYS_COUNT
+      - SNAPSHOT_REPOSITORY
+      - DELETE_OLD_SNAPSHOTS_DAYS_COUNT
+      - DELETE_OLD_LOGS_DISABLE=False
+      - SNAPSHOT_DISABLE=False
+      - DELETE_OLD_SNAPSHOTS_DISABLE=False
+      - RESTORE_SNAPSHOT_DISABLE=True
+    networks:
+      - elastic-net
+    configs:
+      - source: curator-config
+        target: /.curator/curator.yml
+      - source: curator-actions
+        target: /.curator/actions.yml
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        window: 1m
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 128M
+        reservations:
+          memory: 103M
+
+networks:
+  elastic-net:
+    name: ${ELASTIC_NET_NAME:-elastic6-net}
+    external: true
+
+configs:
+  curator-config:
+    name: ${CURATOR_CONFIG_NAME:-curator-config}
+    file: ./config/curator.yml
+
+  curator-actions:
+    name: ${CURATOR_ACTIONS_NAME:-curator-actions}
+    file: ./config/actions.yml

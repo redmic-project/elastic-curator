@@ -1,7 +1,7 @@
 version: '3.5'
 
 services:
-  curator:
+  curator-restore:
     image: bobrik/curator:${IMAGE_TAG:-latest}
     command: /.curator/actions.yml
     environment:
@@ -9,16 +9,13 @@ services:
       - ELASTICSEARCH_AUTH
       - ELASTICSEARCH_PORT
       - CURATOR_TIMEOUT
-      - DELETE_OLD_LOGS_DISABLE
-      - SNAPSHOT_DISABLE
-      - DELETE_OLD_SNAPSHOTS_DISABLE
-      - RESTORE_SNAPSHOT_DISABLE
-      - LOG_INDEX_PREFIX
-      - DELETE_OLD_LOGS_DAYS_COUNT
       - SNAPSHOT_REPOSITORY
-      - DELETE_OLD_SNAPSHOTS_DAYS_COUNT
       - SNAPSHOT_RESTORE_NAME
       - SNAPSHOT_RESTORE_INDICES
+      - DELETE_OLD_LOGS_DISABLE=True
+      - SNAPSHOT_DISABLE=True
+      - DELETE_OLD_SNAPSHOTS_DISABLE=True
+      - RESTORE_SNAPSHOT_DISABLE=False
     networks:
       - elastic-net
     configs:
