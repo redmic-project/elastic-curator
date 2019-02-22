@@ -104,7 +104,7 @@ deploy-curator-stable-branch-production:
     SSH_REMOTE: ${PRO_SSH_REMOTE}
     SERVICES_TO_CHECK: elastic_curator
     COMPOSE_FILE: docker-compose.curator.tmpl.yml:docker-compose.curator.prod.yml
-    ELASTICSEARCH_AUTH: ${PRO_ELASTICSEARCH_USERNAME}:${PRO_ELASTICSEARCH_PASSWORD}
+    ELASTICSEARCH_AUTH: ${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD}
     DELETE_OLD_LOGS_DISABLE: 'False'
     SNAPSHOT_DISABLE: 'False'
     DELETE_OLD_SNAPSHOTS_DISABLE: 'False'
@@ -187,7 +187,7 @@ deploy-old-curator-supporting-branch-production:
     SERVICES_TO_CHECK: elastic_old-curator
     COMPOSE_FILE: docker-compose.old-curator.tmpl.yml:docker-compose.old-curator.prod.yml
     ELASTICSEARCH_URL: http://es-1
-    ELASTICSEARCH_AUTH: ${PRO_ELASTICSEARCH_USERNAME}:${PRO_ELASTICSEARCH_PASSWORD}
+    ELASTICSEARCH_AUTH: ${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD}
     SNAPSHOT_DISABLE: 'False'
     DELETE_OLD_LOGS_DISABLE: 'True'
     DELETE_OLD_SNAPSHOTS_DISABLE: 'True'
