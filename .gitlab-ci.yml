@@ -9,6 +9,8 @@ variables:
   STACK: elastic
   STATUS_CHECK_DELAY: 30
   IMAGE_TAG: ${CURATOR_IMAGE_TAG:-5.6.0}
+  ELASTIC_NET_NAME: elastic6-net
+  SERVICE: elastic_curator
 
 services:
   - docker:dind
@@ -123,20 +125,18 @@ deploy-curator-stable-branch-production:
     - web
   when: manual
 
-scheduled-run-curator-stable-branch-develop:
+scheduled-run-curator-develop:
   stage: maintenance
   variables:
     SSH_REMOTE: ${DEV_SSH_REMOTE}
-    SERVICE: elastic_curator
   script: relaunch.sh
   only:
     - schedules
 
-scheduled-run-curator-stable-branch-production:
+scheduled-run-curator-production:
   stage: maintenance
   variables:
     SSH_REMOTE: ${PRO_SSH_REMOTE}
-    SERVICE: elastic_curator
   script: relaunch.sh
   only:
     - schedules
@@ -153,7 +153,7 @@ deploy-curator-restore-develop:
       deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
       ELASTICSEARCH_URL=${ELASTICSEARCH_URL} ELASTICSEARCH_AUTH=${ELASTICSEARCH_AUTH}
       SNAPSHOT_REPOSITORY=${SNAPSHOT_REPOSITORY} SNAPSHOT_RESTORE_NAME=${SNAPSHOT_RESTORE_NAME}
-      SNAPSHOT_RESTORE_INDICES=${SNAPSHOT_RESTORE_INDICES}
+      SNAPSHOT_RESTORE_INDICES=${SNAPSHOT_RESTORE_INDICES} ELASTIC_NET_NAME=${ELASTIC_NET_NAME}
   environment:
     name: dev/curator-restore
   only:
@@ -172,9 +172,39 @@ deploy-curator-restore-production:
       deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
       ELASTICSEARCH_URL=${ELASTICSEARCH_URL} ELASTICSEARCH_AUTH=${ELASTICSEARCH_AUTH}
       SNAPSHOT_REPOSITORY=${SNAPSHOT_REPOSITORY} SNAPSHOT_RESTORE_NAME=${SNAPSHOT_RESTORE_NAME}
-      SNAPSHOT_RESTORE_INDICES=${SNAPSHOT_RESTORE_INDICES}
+      SNAPSHOT_RESTORE_INDICES=${SNAPSHOT_RESTORE_INDICES} ELASTIC_NET_NAME=${ELASTIC_NET_NAME}
   environment:
     name: pro/curator-restore
   only:
+    - web
+  when: manual
+
+# El siguiente job es temporal, hasta que se unifiquen elasticsearch v5 y v6
+deploy-old-curator-supporting-branch-production:
+  stage: deploy
+  variables:
+    SSH_REMOTE: ${PRO_SSH_REMOTE}
+    SERVICES_TO_CHECK: elastic_old-curator
+    COMPOSE_FILE: docker-compose.old-curator.tmpl.yml:docker-compose.old-curator.prod.yml
+    ELASTICSEARCH_URL: http://es-1
+    ELASTICSEARCH_AUTH: ${PRO_ELASTICSEARCH_USERNAME}:${PRO_ELASTICSEARCH_PASSWORD}
+    SNAPSHOT_DISABLE: 'False'
+    DELETE_OLD_LOGS_DISABLE: 'True'
+    DELETE_OLD_SNAPSHOTS_DISABLE: 'True'
+    RESTORE_SNAPSHOT_DISABLE: 'True'
+  script:
+    - >
+      deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
+      ELASTICSEARCH_URL=${ELASTICSEARCH_URL} ELASTICSEARCH_AUTH="${ELASTICSEARCH_AUTH}"
+      DELETE_OLD_LOGS_DISABLE=${DELETE_OLD_LOGS_DISABLE} SNAPSHOT_DISABLE=${SNAPSHOT_DISABLE}
+      DELETE_OLD_SNAPSHOTS_DISABLE=${DELETE_OLD_SNAPSHOTS_DISABLE}
+      RESTORE_SNAPSHOT_DISABLE=${RESTORE_SNAPSHOT_DISABLE} SNAPSHOT_REPOSITORY=${SNAPSHOT_REPOSITORY}
+  environment:
+    name: pro/old-curator
+  only:
+    - branches
+  except:
+    - master
+    - schedules
     - web
   when: manual
