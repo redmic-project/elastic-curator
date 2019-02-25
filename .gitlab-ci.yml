@@ -141,6 +141,16 @@ scheduled-run-curator-production:
   only:
     - schedules
 
+# El siguiente job es temporal, hasta que se unifiquen elasticsearch v5 y v6
+scheduled-run-old-curator-production:
+  stage: maintenance
+  variables:
+    SSH_REMOTE: ${PRO_SSH_REMOTE}
+    SERVICE: elastic_old-curator
+  script: relaunch.sh
+  only:
+    - schedules
+
 deploy-curator-restore-develop:
   stage: deploy
   variables:
@@ -190,13 +200,11 @@ deploy-old-curator-supporting-branch-production:
     SNAPSHOT_DISABLE: 'False'
     DELETE_OLD_LOGS_DISABLE: 'True'
     DELETE_OLD_SNAPSHOTS_DISABLE: 'True'
-    RESTORE_SNAPSHOT_DISABLE: 'True'
   script:
     - >
       deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE} ELASTICSEARCH_URL=${ELASTICSEARCH_URL}
       DELETE_OLD_LOGS_DISABLE=${DELETE_OLD_LOGS_DISABLE} SNAPSHOT_DISABLE=${SNAPSHOT_DISABLE}
-      DELETE_OLD_SNAPSHOTS_DISABLE=${DELETE_OLD_SNAPSHOTS_DISABLE} RESTORE_SNAPSHOT_DISABLE=${RESTORE_SNAPSHOT_DISABLE}
-      SNAPSHOT_REPOSITORY=${SNAPSHOT_REPOSITORY}
+      DELETE_OLD_SNAPSHOTS_DISABLE=${DELETE_OLD_SNAPSHOTS_DISABLE} SNAPSHOT_REPOSITORY=${SNAPSHOT_REPOSITORY}
   environment:
     name: pro/old-curator
   only:
