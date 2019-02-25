@@ -69,6 +69,7 @@ actions:
       name: ${SNAPSHOT_RESTORE_NAME}
       indices:
       - ${SNAPSHOT_RESTORE_INDICES}
+      include_aliases: ${SNAPSHOT_RESTORE_INCLUDE_ALIASES:True}
       wait_interval: 30
       disable_action: ${RESTORE_SNAPSHOT_DISABLE:True}
     filters:
