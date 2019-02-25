@@ -1,7 +1,7 @@
 version: '3.5'
 
 services:
-  curator:
+  old-curator:
     image: bobrik/curator:${IMAGE_TAG:-latest}
     command: /.curator/actions.yml
     environment:
@@ -40,7 +40,7 @@ services:
 
 networks:
   elastic-net:
-    name: ${ELASTIC_NET_NAME:-elastic6-net}
+    name: ${ELASTIC_NET_NAME:-elastic-net}
     external: true
 
 configs:
