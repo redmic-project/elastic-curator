@@ -23,8 +23,8 @@ deploy-curator-supporting-branch-develop:
     COMPOSE_FILE: docker-compose.curator.tmpl.yml:docker-compose.curator.dev.yml
     ELASTICSEARCH_AUTH: ${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD}
     DELETE_OLD_LOGS_DISABLE: 'False'
-    SNAPSHOT_DISABLE: 'False'
-    DELETE_OLD_SNAPSHOTS_DISABLE: 'False'
+    SNAPSHOT_DISABLE: 'True'
+    DELETE_OLD_SNAPSHOTS_DISABLE: 'True'
   script:
     - >
       deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
@@ -51,8 +51,8 @@ deploy-curator-stable-branch-develop:
     COMPOSE_FILE: docker-compose.curator.tmpl.yml:docker-compose.curator.dev.yml
     ELASTICSEARCH_AUTH: ${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD}
     DELETE_OLD_LOGS_DISABLE: 'False'
-    SNAPSHOT_DISABLE: 'False'
-    DELETE_OLD_SNAPSHOTS_DISABLE: 'False'
+    SNAPSHOT_DISABLE: 'True'
+    DELETE_OLD_SNAPSHOTS_DISABLE: 'True'
   script:
     - >
       deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
