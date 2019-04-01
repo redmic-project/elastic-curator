@@ -3,7 +3,7 @@ actions:
   1:
     action: delete_indices
     description: >-
-      Delete indices older than 30 (by default) days (based on index name), for 'fluentd-' prefixed indices. Ignore
+      Delete indices older than 60 (by default) days (based on index name), for 'fluentd-' prefixed indices. Ignore
       the error if the filter does not result in an actionable list of indices (ignore_empty_list) and exit cleanly.
     options:
       ignore_empty_list: True
@@ -16,9 +16,9 @@ actions:
     - filtertype: age
       source: name
       direction: older
-      timestring: '%Y%m%d'
+      timestring: ${DELETE_OLD_LOGS_TIMESTRING:%Y%m}
       unit: days
-      unit_count: ${DELETE_OLD_LOGS_DAYS_COUNT:30}
+      unit_count: ${DELETE_OLD_LOGS_DAYS_COUNT:60}
 
   2:
     action: snapshot
@@ -70,6 +70,7 @@ actions:
       indices:
       - ${SNAPSHOT_RESTORE_INDICES}
       include_aliases: ${SNAPSHOT_RESTORE_INCLUDE_ALIASES:True}
+      ignore_unavailable: True
       wait_interval: 30
       disable_action: ${RESTORE_SNAPSHOT_DISABLE:True}
     filters:

@@ -2,7 +2,7 @@ version: '3.5'
 
 services:
   curator:
-    image: bobrik/curator:${IMAGE_TAG:-latest}
+    image: ${IMAGE_NAME:-bobrik/curator}:${IMAGE_TAG:-latest}
     command: /.curator/actions.yml
     environment:
       - ELASTICSEARCH_URL
@@ -10,6 +10,7 @@ services:
       - ELASTICSEARCH_PORT
       - CURATOR_TIMEOUT
       - LOG_INDEX_PREFIX
+      - DELETE_OLD_LOGS_TIMESTRING
       - DELETE_OLD_LOGS_DAYS_COUNT
       - SNAPSHOT_REPOSITORY
       - DELETE_OLD_SNAPSHOTS_DAYS_COUNT
