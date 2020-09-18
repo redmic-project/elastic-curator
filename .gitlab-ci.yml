@@ -1,216 +1,220 @@
+include:
+  - project: 'redmic-project/gitlab-ci-templates'
+    ref: master
+    file: '/_deployment.yml'
+  - project: 'redmic-project/gitlab-ci-templates'
+    ref: master
+    file: '/maintenance.yml'
+
 stages:
   - deploy
   - maintenance
 
-image: ${DOCKER_DEPLOY_IMAGE_NAME}:${DOCKER_DEPLOY_IMAGE_TAG}
-
 variables:
-  DOCKER_DRIVER: overlay2
-  STACK: elastic
-  STATUS_CHECK_DELAY: 30
-  IMAGE_TAG: ${CURATOR_IMAGE_TAG:-5.6.0}
-  ELASTIC_NET_NAME: elastic6-net
-  SERVICE: elastic_curator
+  PROJECT_PARENT_NAME: elastic
 
-services:
-  - docker:dind
+# Deployment
 
-deploy-curator-supporting-branch-develop:
-  stage: deploy
+.deploy:
   variables:
-    SSH_REMOTE: ${DEV_SSH_REMOTE}
-    SERVICES_TO_CHECK: elastic_curator
-    COMPOSE_FILE: docker-compose.curator.tmpl.yml:docker-compose.curator.dev.yml
-    ELASTICSEARCH_AUTH: ${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD}
-    DELETE_OLD_LOGS_DISABLE: 'False'
-    SNAPSHOT_DISABLE: 'True'
-    DELETE_OLD_SNAPSHOTS_DISABLE: 'True'
-  script:
-    - >
-      deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
-      ELASTICSEARCH_URL=${ELASTICSEARCH_URL} ELASTICSEARCH_AUTH=${ELASTICSEARCH_AUTH}
-      DELETE_OLD_LOGS_DISABLE=${DELETE_OLD_LOGS_DISABLE} SNAPSHOT_DISABLE=${SNAPSHOT_DISABLE}
-      DELETE_OLD_SNAPSHOTS_DISABLE=${DELETE_OLD_SNAPSHOTS_DISABLE} LOG_INDEX_PREFIX=${LOG_INDEX_PREFIX}
-      DELETE_OLD_LOGS_TIMESTRING=${DELETE_OLD_LOGS_TIMESTRING} DELETE_OLD_LOGS_MONTHS_COUNT=${DELETE_OLD_LOGS_MONTHS_COUNT}
-      SNAPSHOT_REPOSITORY=${SNAPSHOT_REPOSITORY} DELETE_OLD_SNAPSHOTS_DAYS_COUNT=${DELETE_OLD_SNAPSHOTS_DAYS_COUNT}
-  environment:
-    name: dev/curator
-  only:
-    - branches
-  except:
-    - master
-    - schedules
-    - web
-  when: manual
+    STACK: ${PROJECT_PARENT_NAME}
+    STATUS_CHECK_DELAY: 30
 
-deploy-curator-stable-branch-develop:
-  stage: deploy
-  variables:
-    SSH_REMOTE: ${DEV_SSH_REMOTE}
-    SERVICES_TO_CHECK: elastic_curator
-    COMPOSE_FILE: docker-compose.curator.tmpl.yml:docker-compose.curator.dev.yml
-    ELASTICSEARCH_AUTH: ${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD}
-    DELETE_OLD_LOGS_DISABLE: 'False'
-    SNAPSHOT_DISABLE: 'True'
-    DELETE_OLD_SNAPSHOTS_DISABLE: 'True'
-  script:
-    - >
-      deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
-      ELASTICSEARCH_URL=${ELASTICSEARCH_URL} ELASTICSEARCH_AUTH=${ELASTICSEARCH_AUTH}
-      DELETE_OLD_LOGS_DISABLE=${DELETE_OLD_LOGS_DISABLE} SNAPSHOT_DISABLE=${SNAPSHOT_DISABLE}
-      DELETE_OLD_SNAPSHOTS_DISABLE=${DELETE_OLD_SNAPSHOTS_DISABLE} LOG_INDEX_PREFIX=${LOG_INDEX_PREFIX}
-      DELETE_OLD_LOGS_TIMESTRING=${DELETE_OLD_LOGS_TIMESTRING} DELETE_OLD_LOGS_MONTHS_COUNT=${DELETE_OLD_LOGS_MONTHS_COUNT}
-      SNAPSHOT_REPOSITORY=${SNAPSHOT_REPOSITORY} DELETE_OLD_SNAPSHOTS_DAYS_COUNT=${DELETE_OLD_SNAPSHOTS_DAYS_COUNT}
-  environment:
-    name: dev/curator
-  only:
-    - master
-  except:
-    - schedules
-    - web
-  when: manual
+# Curator deployment
 
-deploy-curator-supporting-branch-production:
-  stage: deploy
+.deploy-curator:
+  variables: &deploy-curator-variables
+    SERVICES_TO_CHECK: ${PROJECT_PARENT_NAME}_${CI_PROJECT_NAME}
+
+.deploy-curator-development:
+  extends: .deploy-development
   variables:
-    SSH_REMOTE: ${PRO_SSH_REMOTE}
-    SERVICES_TO_CHECK: elastic_curator
-    COMPOSE_FILE: docker-compose.curator.tmpl.yml:docker-compose.curator.prod.yml
-    ELASTICSEARCH_AUTH: ${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD}
-    DELETE_OLD_LOGS_DISABLE: 'False'
-    SNAPSHOT_DISABLE: 'False'
-    DELETE_OLD_SNAPSHOTS_DISABLE: 'False'
-  script:
-    - >
-      deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
-      ELASTICSEARCH_URL=${ELASTICSEARCH_URL} ELASTICSEARCH_AUTH=${ELASTICSEARCH_AUTH}
-      DELETE_OLD_LOGS_DISABLE=${DELETE_OLD_LOGS_DISABLE} SNAPSHOT_DISABLE=${SNAPSHOT_DISABLE}
-      DELETE_OLD_SNAPSHOTS_DISABLE=${DELETE_OLD_SNAPSHOTS_DISABLE} LOG_INDEX_PREFIX=${LOG_INDEX_PREFIX}
-      DELETE_OLD_LOGS_TIMESTRING=${DELETE_OLD_LOGS_TIMESTRING} DELETE_OLD_LOGS_MONTHS_COUNT=${DELETE_OLD_LOGS_MONTHS_COUNT}
-      SNAPSHOT_REPOSITORY=${SNAPSHOT_REPOSITORY} DELETE_OLD_SNAPSHOTS_DAYS_COUNT=${DELETE_OLD_SNAPSHOTS_DAYS_COUNT}
+    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}.tmpl.yml:docker-compose.${CI_PROJECT_NAME}.dev.yml
+    <<: *deploy-curator-variables
   environment:
-    name: pro/curator
-  only:
-    - branches
-  except:
-    - master
-    - schedules
-    - web
-  when: manual
+    name: dev/${CI_PROJECT_NAME}
+
+.deploy-curator-production:
+  extends: .deploy-production
+  variables:
+    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}.tmpl.yml:docker-compose.${CI_PROJECT_NAME}.prod.yml
+    <<: *deploy-curator-variables
+  environment:
+    name: pro/${CI_PROJECT_NAME}
+
+.deploy-curator-support-branch: &deploy-curator-support-branch
+  rules:
+    - if: $CI_MERGE_REQUEST_ID ||
+          $CI_COMMIT_TAG ||
+          $CI_PIPELINE_SOURCE == "schedule" ||
+          $CI_PIPELINE_SOURCE == "web" ||
+          $CI_COMMIT_BRANCH == "master"
+      when: never
+    - if: $CI_COMMIT_BRANCH
+      when: manual
+      allow_failure: true
+
+deploy-curator-support-branch-development:
+  extends: .deploy-curator-development
+  <<: *deploy-curator-support-branch
+
+.deploy-curator-stable-branch: &deploy-curator-stable-branch
+  rules:
+    - if: $CI_MERGE_REQUEST_ID ||
+          $CI_COMMIT_TAG ||
+          $CI_PIPELINE_SOURCE == "schedule" ||
+          $CI_PIPELINE_SOURCE == "web"
+      when: never
+    - if: $CI_COMMIT_BRANCH == "master"
+      when: manual
+      allow_failure: true
+
+deploy-curator-stable-branch-development:
+  extends: .deploy-curator-development
+  <<: *deploy-curator-stable-branch
 
 deploy-curator-stable-branch-production:
-  stage: deploy
+  extends: .deploy-curator-production
+  <<: *deploy-curator-stable-branch
+
+.deploy-curator-tag: &deploy-curator-tag
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: manual
+      allow_failure: true
+
+deploy-curator-tag-development:
+  extends: .deploy-curator-development
+  <<: *deploy-curator-tag
+
+deploy-curator-tag-production:
+  extends: .deploy-curator-production
+  <<: *deploy-curator-tag
+
+# Curator-restore deployment
+
+.deploy-curator-restore:
+  variables: &deploy-curator-restore-variables
+    SERVICES_TO_CHECK: ${PROJECT_PARENT_NAME}_${CI_PROJECT_NAME}-restore
+
+.deploy-curator-restore-development:
+  extends: .deploy-development
   variables:
-    SSH_REMOTE: ${PRO_SSH_REMOTE}
-    SERVICES_TO_CHECK: elastic_curator
-    COMPOSE_FILE: docker-compose.curator.tmpl.yml:docker-compose.curator.prod.yml
-    ELASTICSEARCH_AUTH: ${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD}
-    DELETE_OLD_LOGS_DISABLE: 'False'
-    SNAPSHOT_DISABLE: 'False'
-    DELETE_OLD_SNAPSHOTS_DISABLE: 'False'
-  script:
-    - >
-      deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
-      ELASTICSEARCH_URL=${ELASTICSEARCH_URL} ELASTICSEARCH_AUTH=${ELASTICSEARCH_AUTH}
-      DELETE_OLD_LOGS_DISABLE=${DELETE_OLD_LOGS_DISABLE} SNAPSHOT_DISABLE=${SNAPSHOT_DISABLE}
-      DELETE_OLD_SNAPSHOTS_DISABLE=${DELETE_OLD_SNAPSHOTS_DISABLE} LOG_INDEX_PREFIX=${LOG_INDEX_PREFIX}
-      DELETE_OLD_LOGS_TIMESTRING=${DELETE_OLD_LOGS_TIMESTRING} DELETE_OLD_LOGS_MONTHS_COUNT=${DELETE_OLD_LOGS_MONTHS_COUNT}
-      SNAPSHOT_REPOSITORY=${SNAPSHOT_REPOSITORY} DELETE_OLD_SNAPSHOTS_DAYS_COUNT=${DELETE_OLD_SNAPSHOTS_DAYS_COUNT}
+    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-restore.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-restore.dev.yml
+    <<: *deploy-curator-restore-variables
   environment:
-    name: pro/curator
-  only:
-    - master
-  except:
-    - schedules
-    - web
-  when: manual
+    name: dev/${CI_PROJECT_NAME}-restore
 
-scheduled-run-curator-develop:
-  stage: maintenance
+.deploy-curator-restore-production:
+  extends: .deploy-production
   variables:
-    SSH_REMOTE: ${DEV_SSH_REMOTE}
-  script: relaunch.sh
-  only:
-    - schedules
+    COMPOSE_FILE: docker-compose.${CI_PROJECT_NAME}-restore.tmpl.yml:docker-compose.${CI_PROJECT_NAME}-restore.prod.yml
+    <<: *deploy-curator-restore-variables
+  environment:
+    name: pro/${CI_PROJECT_NAME}-restore
 
-scheduled-run-curator-production:
-  stage: maintenance
+.deploy-curator-restore-support-branch: &deploy-curator-restore-support-branch
+  rules:
+    - if: $CI_MERGE_REQUEST_ID ||
+          $CI_COMMIT_TAG ||
+          $CI_PIPELINE_SOURCE == "schedule" ||
+          $CI_COMMIT_BRANCH == "master"
+      when: never
+    - if: $CI_COMMIT_BRANCH &&
+          $CI_PIPELINE_SOURCE == "web"
+      when: manual
+      allow_failure: true
+
+deploy-curator-restore-support-branch-development:
+  extends: .deploy-curator-restore-development
+  <<: *deploy-curator-restore-support-branch
+
+.deploy-curator-restore-stable-branch: &deploy-curator-restore-stable-branch
+  rules:
+    - if: $CI_MERGE_REQUEST_ID ||
+          $CI_COMMIT_TAG ||
+          $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - if: $CI_COMMIT_BRANCH == "master" &&
+          $CI_PIPELINE_SOURCE == "web"
+      when: manual
+      allow_failure: true
+
+deploy-curator-restore-stable-branch-development:
+  extends: .deploy-curator-restore-development
+  <<: *deploy-curator-restore-stable-branch
+
+deploy-curator-restore-stable-branch-production:
+  extends: .deploy-curator-restore-production
+  <<: *deploy-curator-restore-stable-branch
+
+# Old-curator deployment
+# Jobs temporales, hasta unificar Elasticsearch v5 y v6
+
+.deploy-old-curator:
+  variables: &deploy-old-curator-variables
+    SERVICES_TO_CHECK: ${PROJECT_PARENT_NAME}_old-${CI_PROJECT_NAME}
+
+.deploy-old-curator-development:
+  extends: .deploy-development
   variables:
-    SSH_REMOTE: ${PRO_SSH_REMOTE}
-  script: relaunch.sh
-  only:
-    - schedules
+    COMPOSE_FILE: docker-compose.old-${CI_PROJECT_NAME}.tmpl.yml:docker-compose.old-${CI_PROJECT_NAME}.dev.yml
+    <<: *deploy-old-curator-variables
+  environment:
+    name: dev/old-${CI_PROJECT_NAME}
 
-# El siguiente job es temporal, hasta que se unifiquen elasticsearch v5 y v6
+.deploy-old-curator-production:
+  extends: .deploy-production
+  variables:
+    COMPOSE_FILE: docker-compose.old-${CI_PROJECT_NAME}.tmpl.yml:docker-compose.old-${CI_PROJECT_NAME}.prod.yml
+    <<: *deploy-old-curator-variables
+  environment:
+    name: pro/old-${CI_PROJECT_NAME}
+
+.deploy-old-curator-support-branch: &deploy-old-curator-support-branch
+  rules:
+    - if: $CI_MERGE_REQUEST_ID ||
+          $CI_COMMIT_TAG ||
+          $CI_PIPELINE_SOURCE == "schedule" ||
+          $CI_PIPELINE_SOURCE == "web" ||
+          $CI_COMMIT_BRANCH == "master"
+      when: never
+    - if: $CI_COMMIT_BRANCH
+      when: manual
+      allow_failure: true
+
+deploy-old-curator-support-branch-development:
+  extends: .deploy-old-curator-development
+  <<: *deploy-old-curator-support-branch
+
+.deploy-old-curator-stable-branch: &deploy-old-curator-stable-branch
+  rules:
+    - if: $CI_MERGE_REQUEST_ID ||
+          $CI_COMMIT_TAG ||
+          $CI_PIPELINE_SOURCE == "schedule" ||
+          $CI_PIPELINE_SOURCE == "web"
+      when: never
+    - if: $CI_COMMIT_BRANCH == "master"
+      when: manual
+      allow_failure: true
+
+deploy-old-curator-stable-branch-development:
+  extends: .deploy-old-curator-development
+  <<: *deploy-old-curator-stable-branch
+
+deploy-old-curator-stable-branch-production:
+  extends: .deploy-old-curator-production
+  <<: *deploy-old-curator-stable-branch
+
+# Maintenance
+
+.scheduled-run:
+  variables:
+    STACK: ${PROJECT_PARENT_NAME}
+    SERVICE: ${PROJECT_PARENT_NAME}_${CI_PROJECT_NAME}
+
+# Job temporal, hasta unificar Elasticsearch v5 y v6
 scheduled-run-old-curator-production:
-  stage: maintenance
+  extends: scheduled-run-production
   variables:
-    SSH_REMOTE: ${PRO_SSH_REMOTE}
-    SERVICE: elastic_old-curator
-  script: relaunch.sh
-  only:
-    - schedules
-
-deploy-curator-restore-develop:
-  stage: deploy
-  variables:
-    SSH_REMOTE: ${DEV_SSH_REMOTE}
-    SERVICES_TO_CHECK: elastic_curator-restore
-    COMPOSE_FILE: docker-compose.curator-restore.tmpl.yml:docker-compose.curator-restore.dev.yml
-    ELASTICSEARCH_AUTH: ${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD}
-  script:
-    - >
-      deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
-      ELASTICSEARCH_URL=${ELASTICSEARCH_URL} ELASTICSEARCH_AUTH=${ELASTICSEARCH_AUTH}
-      SNAPSHOT_REPOSITORY=${SNAPSHOT_REPOSITORY} SNAPSHOT_RESTORE_NAME=${SNAPSHOT_RESTORE_NAME}
-      SNAPSHOT_RESTORE_INDICES=${SNAPSHOT_RESTORE_INDICES} ELASTIC_NET_NAME=${ELASTIC_NET_NAME}
-  environment:
-    name: dev/curator-restore
-  only:
-    - web
-  when: manual
-
-deploy-curator-restore-production:
-  stage: deploy
-  variables:
-    SSH_REMOTE: ${PRO_SSH_REMOTE}
-    SERVICES_TO_CHECK: elastic_curator-restore
-    COMPOSE_FILE: docker-compose.curator-restore.tmpl.yml:docker-compose.curator-restore.prod.yml
-    ELASTICSEARCH_AUTH: ${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD}
-  script:
-    - >
-      deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE}
-      ELASTICSEARCH_URL=${ELASTICSEARCH_URL} ELASTICSEARCH_AUTH=${ELASTICSEARCH_AUTH}
-      SNAPSHOT_REPOSITORY=${SNAPSHOT_REPOSITORY} SNAPSHOT_RESTORE_NAME=${SNAPSHOT_RESTORE_NAME}
-      SNAPSHOT_RESTORE_INDICES=${SNAPSHOT_RESTORE_INDICES} ELASTIC_NET_NAME=${ELASTIC_NET_NAME}
-  environment:
-    name: pro/curator-restore
-  only:
-    - web
-  when: manual
-
-# El siguiente job es temporal, hasta que se unifiquen elasticsearch v5 y v6
-deploy-old-curator-supporting-branch-production:
-  stage: deploy
-  variables:
-    SSH_REMOTE: ${PRO_SSH_REMOTE}
-    SERVICES_TO_CHECK: elastic_old-curator
-    COMPOSE_FILE: docker-compose.old-curator.tmpl.yml:docker-compose.old-curator.prod.yml
-    ELASTICSEARCH_URL: http://es-1
-    SNAPSHOT_DISABLE: 'False'
-    DELETE_OLD_LOGS_DISABLE: 'True'
-    DELETE_OLD_SNAPSHOTS_DISABLE: 'True'
-  script:
-    - >
-      deploy.sh IMAGE_TAG=${IMAGE_TAG} COMPOSE_FILE=${COMPOSE_FILE} ELASTICSEARCH_URL=${ELASTICSEARCH_URL}
-      DELETE_OLD_LOGS_DISABLE=${DELETE_OLD_LOGS_DISABLE} SNAPSHOT_DISABLE=${SNAPSHOT_DISABLE}
-      DELETE_OLD_SNAPSHOTS_DISABLE=${DELETE_OLD_SNAPSHOTS_DISABLE} SNAPSHOT_REPOSITORY=${SNAPSHOT_REPOSITORY}
-  environment:
-    name: pro/old-curator
-  only:
-    - branches
-  except:
-    - master
-    - schedules
-    - web
-  when: manual
+    SERVICE: ${PROJECT_PARENT_NAME}_old-${CI_PROJECT_NAME}
