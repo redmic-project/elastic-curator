@@ -2,50 +2,54 @@ version: '3.5'
 
 services:
   curator-restore:
-    image: bobrik/curator:${IMAGE_TAG:-latest}
-    command: /.curator/actions.yml
+    image: ${IMAGE_NAME:-bobrik/curator}:${IMAGE_TAG:-latest}
+    command: ${CURATOR_ACTIONS_PATH}
     environment:
-      - ELASTICSEARCH_URL
-      - ELASTICSEARCH_AUTH
-      - ELASTICSEARCH_PORT
-      - CURATOR_TIMEOUT
-      - SNAPSHOT_REPOSITORY
-      - SNAPSHOT_RESTORE_NAME
-      - SNAPSHOT_RESTORE_INDICES
-      - SNAPSHOT_RESTORE_INCLUDE_ALIASES
-      - DELETE_OLD_LOGS_DISABLE=True
-      - SNAPSHOT_DISABLE=True
-      - DELETE_OLD_SNAPSHOTS_DISABLE=True
-      - RESTORE_SNAPSHOT_DISABLE=False
+      ELASTICSEARCH_URL:
+      ELASTICSEARCH_AUTH: ${ES_USER}:${ES_PASS}
+      ELASTICSEARCH_PORT:
+      CURATOR_TIMEOUT:
+      SNAPSHOT_REPOSITORY:
+      SNAPSHOT_RESTORE_NAME:
+      SNAPSHOT_RESTORE_INDICES:
+      SNAPSHOT_RESTORE_INCLUDE_ALIASES:
+      DELETE_OLD_LOGS_DISABLE: 'True'
+      SNAPSHOT_DISABLE: 'True'
+      DELETE_OLD_SNAPSHOTS_DISABLE: 'True'
+      RESTORE_SNAPSHOT_DISABLE: 'False'
     networks:
-      - elastic-net
+      elastic-net:
     configs:
       - source: curator-config
-        target: /.curator/curator.yml
+        target: ${CURATOR_CONFIG_PATH}
       - source: curator-actions
-        target: /.curator/actions.yml
+        target: ${CURATOR_ACTIONS_PATH}
     deploy:
       mode: replicated
-      replicas: 1
+      replicas: ${REPLICAS:-1}
       restart_policy:
         condition: none
+      update_config:
+        delay: ${UPDATE_DELAY:-1m}
       resources:
         limits:
-          cpus: '0.1'
-          memory: 64M
+          cpus: '${RESOURCES_LIMITS_CPUS:-0.1}'
+          memory: ${RESOURCES_LIMITS_MEMORY:-64M}
         reservations:
-          memory: 32M
+          cpus: '${RESOURCES_RESERVATIONS_CPUS:-0.001}'
+          memory: ${RESOURCES_RESERVATIONS_MEMORY:-32M}
 
 networks:
   elastic-net:
-    name: ${ELASTIC_NET_NAME:-elastic6-net}
+    name: ${ELASTIC_NET_NAME}
+    driver: ${ELASTIC_NET_DRIVER}
     external: true
 
 configs:
   curator-config:
-    name: ${CURATOR_CONFIG_NAME:-curator-config}
+    name: ${CURATOR_CONFIG_CONFIG_NAME}
     file: ./config/curator.yml
 
   curator-actions:
-    name: ${CURATOR_ACTIONS_NAME:-curator-actions}
+    name: ${CURATOR_ACTIONS_CONFIG_NAME}
     file: ./config/actions.yml
