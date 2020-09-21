@@ -19,7 +19,7 @@ For example, to restore last snapshot of an index named `test` with a new name `
 ```sh
 DD_SNAPSHOT_RESTORE_INDICES=test
 DD_SNAPSHOT_RESTORE_RENAME_PATTERN=(.+)
-DD_SNAPSHOT_RESTORE_RENAME_REPLACEMENT=restored_$1
+DD_SNAPSHOT_RESTORE_RENAME_REPLACEMENT=restored_$$1 # Double dollar to avoid gitlab-ci replacement
 ```
 
 Remember to use a renamed value which doesn't interfere with existing aliases.
