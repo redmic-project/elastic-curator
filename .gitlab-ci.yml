@@ -148,73 +148,9 @@ deploy-curator-restore-stable-branch-production:
   extends: .deploy-curator-restore-production
   <<: *deploy-curator-restore-stable-branch
 
-# Old-curator deployment
-# Jobs temporales, hasta unificar Elasticsearch v5 y v6
-
-.deploy-old-curator:
-  variables: &deploy-old-curator-variables
-    SERVICES_TO_CHECK: ${PROJECT_PARENT_NAME}_old-${CI_PROJECT_NAME}
-
-.deploy-old-curator-development:
-  extends: .deploy-development
-  variables:
-    COMPOSE_FILE: docker-compose.old-${CI_PROJECT_NAME}.tmpl.yml:docker-compose.old-${CI_PROJECT_NAME}.dev.yml
-    <<: *deploy-old-curator-variables
-  environment:
-    name: dev/old-${CI_PROJECT_NAME}
-
-.deploy-old-curator-production:
-  extends: .deploy-production
-  variables:
-    COMPOSE_FILE: docker-compose.old-${CI_PROJECT_NAME}.tmpl.yml:docker-compose.old-${CI_PROJECT_NAME}.prod.yml
-    <<: *deploy-old-curator-variables
-  environment:
-    name: pro/old-${CI_PROJECT_NAME}
-
-.deploy-old-curator-support-branch: &deploy-old-curator-support-branch
-  rules:
-    - if: $CI_MERGE_REQUEST_ID ||
-          $CI_COMMIT_TAG ||
-          $CI_PIPELINE_SOURCE == "schedule" ||
-          $CI_PIPELINE_SOURCE == "web" ||
-          $CI_COMMIT_BRANCH == "master"
-      when: never
-    - if: $CI_COMMIT_BRANCH
-      when: manual
-      allow_failure: true
-
-deploy-old-curator-support-branch-development:
-  extends: .deploy-old-curator-development
-  <<: *deploy-old-curator-support-branch
-
-.deploy-old-curator-stable-branch: &deploy-old-curator-stable-branch
-  rules:
-    - if: $CI_MERGE_REQUEST_ID ||
-          $CI_COMMIT_TAG ||
-          $CI_PIPELINE_SOURCE == "schedule" ||
-          $CI_PIPELINE_SOURCE == "web"
-      when: never
-    - if: $CI_COMMIT_BRANCH == "master"
-      when: manual
-      allow_failure: true
-
-deploy-old-curator-stable-branch-development:
-  extends: .deploy-old-curator-development
-  <<: *deploy-old-curator-stable-branch
-
-deploy-old-curator-stable-branch-production:
-  extends: .deploy-old-curator-production
-  <<: *deploy-old-curator-stable-branch
-
 # Maintenance
 
 .scheduled-run:
   variables:
     STACK: ${PROJECT_PARENT_NAME}
     SERVICE: ${PROJECT_PARENT_NAME}_${CI_PROJECT_NAME}
-
-# Job temporal, hasta unificar Elasticsearch v5 y v6
-scheduled-run-old-curator-production:
-  extends: scheduled-run-production
-  variables:
-    SERVICE: ${PROJECT_PARENT_NAME}_old-${CI_PROJECT_NAME}
